@@ -1,98 +1,1018 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="ur" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Hardware Tester Pro</title>
-    <style>
-        :root { --gold: #ffd700; --dark: #121212; --card: #1e1e1e; }
-        body {
-            background-color: var(--dark); color: white;
-            font-family: sans-serif; margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center; direction: rtl;
-        }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: var(--gold); margin: 0; font-size: 28px; }
-        .header p { color: #888; font-size: 14px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>قلم — ورڈ پروسیسر</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
 
-        .grid {
-            display: grid; grid-template-columns: 1 service/ 1fr;
-            gap: 15px; width: 100%; max-width: 400px;
-        }
-        .btn {
-            background: var(--card); border: 1px solid #333;
-            color: white; padding: 20px; border-radius: 12px;
-            font-size: 18px; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; justify-content: space-between;
-            transition: 0.3s;
-        }
-        .btn:active { transform: scale(0.96); border-color: var(--gold); background: #252525; }
-        .icon { font-size: 24px; }
-        .status-bar {
-            margin-top: 30px; width: 100%; max-width: 400px;
-            padding: 15px; background: #000; border-radius: 8px;
-            border-right: 4px solid var(--gold); font-size: 13px; color: #0f0;
-        }
-    </style>
+  :root {
+    --ink:       #1a1410;
+    --parchment: #fdf8f0;
+    --cream:     #f5ede0;
+    --gold:      #c8963e;
+    --gold-lt:   #e8b96a;
+    --rust:      #8b3a2a;
+    --teal:      #2a6b6e;
+    --panel:     #2b2118;
+    --panel2:    #3d2f22;
+    --btn-text:  #e8d9c0;
+    --border:    #5a3f28;
+    --shadow:    rgba(0,0,0,.45);
+    --page-w:    210mm;
+    --page-h:    297mm;
+    --margin:    20mm;
+    --font-size: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Nastaliq Urdu', serif;
+    background: var(--panel);
+    color: var(--ink);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ===== TOP BAR ===== */
+  #app-bar {
+    background: linear-gradient(135deg, #1a0f08 0%, #2b1a10 60%, #1e1208 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 6px 10px 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    position: relative;
+    box-shadow: 0 3px 12px var(--shadow);
+  }
+
+  #app-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 20px;
+    font-style: italic;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    text-shadow: 0 0 20px rgba(200,150,62,.4);
+  }
+
+  #toolbar-wrap {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #toolbar-wrap::-webkit-scrollbar { display: none; }
+
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 0;
+    white-space: nowrap;
+    min-width: max-content;
+  }
+
+  /* ===== TOOLBAR ELEMENTS ===== */
+  .sep {
+    width: 1px;
+    height: 26px;
+    background: var(--border);
+    margin: 0 3px;
+    flex-shrink: 0;
+  }
+
+  .tb-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--btn-text);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, border-color .15s, transform .1s;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    line-height: 1.2;
+  }
+  .tb-btn:active { transform: scale(.93); }
+  .tb-btn:hover, .tb-btn.active {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold-lt);
+  }
+  .tb-btn.icon-btn { font-size: 16px; padding: 4px 7px; }
+  .tb-btn.danger { border-color: var(--rust); }
+  .tb-btn.danger:hover { background: var(--rust); }
+
+  select.tb-select {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--btn-text);
+    border-radius: 6px;
+    padding: 5px 4px;
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    max-width: 90px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  select.tb-select:focus { outline: none; border-color: var(--gold); }
+
+  input[type=color].tb-color {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+    background: var(--panel2);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  input[type=number].tb-num {
+    width: 44px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--btn-text);
+    border-radius: 6px;
+    padding: 5px 4px;
+    font-size: 12px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  input[type=number].tb-num:focus { outline: none; border-color: var(--gold); }
+
+  label.tb-label {
+    color: #9a8060;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    flex-shrink: 0;
+  }
+
+  /* ===== SCROLL HINT ARROWS ===== */
+  .scroll-hint {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(to left, #1a0f08 40%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: none;
+    color: var(--gold);
+    font-size: 14px;
+  }
+
+  /* ===== STATUS BAR ===== */
+  #status-bar {
+    background: #150e08;
+    border-bottom: 1px solid var(--border);
+    padding: 3px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  #status-bar span {
+    color: #7a6040;
+    font-size: 10px;
+    font-family: monospace;
+  }
+  #status-bar span.highlight { color: var(--gold-lt); }
+
+  /* ===== EDITOR AREA ===== */
+  #editor-wrap {
+    flex: 1;
+    overflow-y: auto;
+    background: #1a1008;
+    padding: 16px 10px;
+    display: flex;
+    justify-content: center;
+  }
+
+  #page {
+    background: var(--parchment);
+    width: var(--page-w);
+    min-height: var(--page-h);
+    padding: var(--margin);
+    box-shadow: 0 4px 30px rgba(0,0,0,.7), 0 0 0 1px rgba(200,150,62,.15);
+    border-radius: 2px;
+    position: relative;
+    max-width: 100%;
+  }
+
+  #editor {
+    min-height: calc(var(--page-h) - 2 * var(--margin));
+    outline: none;
+    font-size: var(--font-size);
+    line-height: 1.8;
+    color: var(--ink);
+    word-break: break-word;
+    font-family: 'Noto Nastaliq Urdu', serif;
+    text-align: right;
+    direction: rtl;
+    caret-color: var(--rust);
+  }
+
+  #editor:focus { outline: none; }
+
+  #editor p { margin-bottom: 0.5em; }
+  #editor:empty::before {
+    content: attr(data-placeholder);
+    color: #c0a882;
+    font-style: italic;
+    pointer-events: none;
+  }
+
+  /* ===== POPUP PANELS ===== */
+  .popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .popup-overlay.open { display: flex; }
+
+  .popup-sheet {
+    background: linear-gradient(180deg, #2b1a10 0%, #1e1208 100%);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 18px 18px 0 0;
+    padding: 20px 18px 30px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 -4px 30px var(--shadow);
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .popup-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 17px;
+    margin-bottom: 16px;
+    font-style: italic;
+    text-align: center;
+  }
+
+  .popup-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .popup-row label {
+    color: var(--btn-text);
+    font-size: 13px;
+    min-width: 100px;
+  }
+
+  .popup-row input, .popup-row select {
+    flex: 1;
+    background: #1a0f08;
+    border: 1px solid var(--border);
+    color: var(--btn-text);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    min-width: 80px;
+  }
+  .popup-row input:focus, .popup-row select:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .popup-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .popup-btn {
+    flex: 1;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--btn-text);
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    transition: background .15s;
+    min-width: 80px;
+  }
+  .popup-btn:hover, .popup-btn.primary {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold-lt);
+    font-weight: bold;
+  }
+  .popup-btn.close-btn { background: #3a1a12; border-color: var(--rust); }
+
+  /* Option groups */
+  .option-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .option-chip {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--btn-text);
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .option-chip.selected {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold-lt);
+    font-weight: bold;
+  }
+
+  /* ===== FONT LIST ===== */
+  #custom-font-list {
+    margin-top: 10px;
+  }
+  #custom-font-list .font-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #1a0f08;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    color: var(--btn-text);
+    font-size: 12px;
+  }
+  #custom-font-list .font-item button {
+    background: none;
+    border: none;
+    color: var(--rust);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+
+  /* ===== TOAST ===== */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    color: var(--gold-lt);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity .3s, transform .3s;
+    z-index: 200;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ===== PRINT HIDDEN ===== */
+  @media print {
+    body * { visibility: hidden; }
+    #page, #page * { visibility: visible; }
+    #page { position: fixed; inset: 0; }
+  }
+
+  /* ===== SCROLLBAR ===== */
+  #editor-wrap::-webkit-scrollbar { width: 4px; }
+  #editor-wrap::-webkit-scrollbar-track { background: #1a1008; }
+  #editor-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* spacing select small */
+  .tb-select-sm {
+    max-width: 60px;
+    font-size: 11px;
+    padding: 5px 2px;
+  }
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>ہارڈ ویئر ٹیسٹر</h1>
-        <p>فون کے فیچرز چیک کریں</p>
+<!-- ===== APP BAR ===== -->
+<div id="app-bar">
+  <div id="app-title">قلم</div>
+  <div id="toolbar-wrap">
+    <div id="toolbar">
+
+      <!-- PAGE -->
+      <span class="tb-label">📄</span>
+      <button class="tb-btn" onclick="openPopup('popup-page')">صفحہ</button>
+
+      <div class="sep"></div>
+
+      <!-- FONT -->
+      <span class="tb-label">خط</span>
+      <select class="tb-select" id="font-select" onchange="applyFont()">
+        <option value="'Noto Nastaliq Urdu',serif">نستعلیق</option>
+        <option value="'Noto Naskh Arabic',serif">نسخ عربی</option>
+        <option value="Georgia,serif">Georgia</option>
+        <option value="'Times New Roman',serif">Times New Roman</option>
+        <option value="monospace">Monospace</option>
+      </select>
+      <button class="tb-btn" onclick="openPopup('popup-font')">+ فونٹ</button>
+
+      <div class="sep"></div>
+
+      <!-- FONT SIZE -->
+      <span class="tb-label">سائز</span>
+      <button class="tb-btn icon-btn" onclick="changeFontSize(-1)">−</button>
+      <input type="number" class="tb-num" id="font-size-inp" value="16" min="8" max="96" onchange="setFontSize()">
+      <button class="tb-btn icon-btn" onclick="changeFontSize(1)">+</button>
+
+      <div class="sep"></div>
+
+      <!-- STYLES -->
+      <button class="tb-btn icon-btn" id="btn-bold" onclick="execFmt('bold')" title="Bold"><b>B</b></button>
+      <button class="tb-btn icon-btn" id="btn-italic" onclick="execFmt('italic')" title="Italic"><i>I</i></button>
+      <button class="tb-btn icon-btn" id="btn-underline" onclick="execFmt('underline')" title="Underline"><u>U</u></button>
+
+      <div class="sep"></div>
+
+      <!-- COLORS -->
+      <span class="tb-label">رنگ</span>
+      <input type="color" class="tb-color" id="text-color" value="#1a1410" onchange="applyColor()" title="متن کا رنگ">
+      <input type="color" class="tb-color" id="highlight-color" value="#ffff00" onchange="applyHighlight()" title="ہائی لائٹ">
+      <button class="tb-btn" onclick="applyHighlight()" title="ہائی لائٹ">🖊</button>
+
+      <div class="sep"></div>
+
+      <!-- DIRECTION -->
+      <button class="tb-btn active" id="btn-rtl" onclick="setDir('rtl')">RTL ←</button>
+      <button class="tb-btn" id="btn-ltr" onclick="setDir('ltr')">→ LTR</button>
+
+      <div class="sep"></div>
+
+      <!-- ALIGN -->
+      <button class="tb-btn icon-btn" onclick="execFmt('justifyRight')" title="دائیں">⇤</button>
+      <button class="tb-btn icon-btn" onclick="execFmt('justifyCenter')" title="درمیان">≡</button>
+      <button class="tb-btn icon-btn" onclick="execFmt('justifyLeft')" title="بائیں">⇥</button>
+      <button class="tb-btn icon-btn" onclick="execFmt('justifyFull')" title="برابر">≣</button>
+
+      <div class="sep"></div>
+
+      <!-- SPACING -->
+      <span class="tb-label">فاصلہ</span>
+      <select class="tb-select tb-select-sm" id="line-spacing" onchange="applyLineSpacing()" title="لائن فاصلہ">
+        <option value="1.4">1.4</option>
+        <option value="1.6">1.6</option>
+        <option value="1.8" selected>1.8</option>
+        <option value="2.0">2.0</option>
+        <option value="2.4">2.4</option>
+        <option value="3.0">3.0</option>
+      </select>
+      <button class="tb-btn" onclick="openPopup('popup-spacing')">⇕</button>
+
+      <div class="sep"></div>
+
+      <!-- LISTS -->
+      <button class="tb-btn icon-btn" onclick="execFmt('insertUnorderedList')" title="فہرست">•≡</button>
+      <button class="tb-btn icon-btn" onclick="execFmt('insertOrderedList')" title="نمبر فہرست">1≡</button>
+
+      <div class="sep"></div>
+
+      <!-- SAVE -->
+      <button class="tb-btn" onclick="openPopup('popup-save')">💾 محفوظ</button>
+
+      <div class="sep"></div>
+
+      <!-- UNDO/REDO -->
+      <button class="tb-btn icon-btn" onclick="document.execCommand('undo')" title="واپس">↩</button>
+      <button class="tb-btn icon-btn" onclick="document.execCommand('redo')" title="آگے">↪</button>
+
+    </div>
+  </div>
+  <div class="scroll-hint">›</div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="status-bar">
+  <span id="word-count">الفاظ: 0</span>
+  <span id="char-count">حروف: 0</span>
+  <span id="page-info" class="highlight">A4 · نارمل</span>
+</div>
+
+<!-- ===== EDITOR ===== -->
+<div id="editor-wrap">
+  <div id="page">
+    <div id="editor"
+      contenteditable="true"
+      spellcheck="true"
+      data-placeholder="یہاں لکھنا شروع کریں..."
+    ></div>
+  </div>
+</div>
+
+<!-- ===== POPUP: PAGE SETTINGS ===== -->
+<div class="popup-overlay" id="popup-page" onclick="closeOnBg(event, 'popup-page')">
+  <div class="popup-sheet">
+    <div class="popup-title">📄 صفحہ کی ترتیب</div>
+
+    <label style="color:var(--btn-text);font-size:13px;display:block;margin-bottom:6px">صفحہ کا سائز</label>
+    <div class="option-group" id="size-group">
+      <div class="option-chip selected" data-val="a4" onclick="selectChip('size-group',this);setPageSize('a4')">A4</div>
+      <div class="option-chip" data-val="letter" onclick="selectChip('size-group',this);setPageSize('letter')">Letter</div>
+      <div class="option-chip" data-val="legal" onclick="selectChip('size-group',this);setPageSize('legal')">Legal</div>
     </div>
 
-    <div class="grid">
-        <button class="btn" onclick="log('کیمرہ کھل رہا ہے...')">
-            <span>کیمرہ ٹیسٹ</span> <span class="icon">📷</span>
-        </button>
-
-        <button class="btn" onclick="log('مائیک ریکارڈنگ شروع...')">
-            <span>مائیک (آواز)</span> <span class="icon">🎤</span>
-        </button>
-
-        <button class="btn" onclick="log('فائل میجر / گیلری ایکسس...')">
-            <span>میموری ایکسس</span> <span class="icon">📁</span>
-        </button>
-
-        <button class="btn" onclick="log('لوکیشن معلوم کی جا رہی ہے...')">
-            <span>GPS لوکیشن</span> <span class="icon">📍</span>
-        </button>
-
-        <button class="btn" onclick="vibrateDevice()">
-            <span>وائبریشن ٹیسٹ</span> <span class="icon">📳</span>
-        </button>
-
-        <button class="btn" onclick="playSound()">
-            <span>سپیکر / آواز</span> <span class="icon">🔊</span>
-        </button>
+    <label style="color:var(--btn-text);font-size:13px;display:block;margin-bottom:6px;margin-top:12px">مارجن</label>
+    <div class="option-group" id="margin-group">
+      <div class="option-chip selected" data-val="normal" onclick="selectChip('margin-group',this);setMargin('normal')">نارمل (20mm)</div>
+      <div class="option-chip" data-val="narrow" onclick="selectChip('margin-group',this);setMargin('narrow')">تنگ (12mm)</div>
+      <div class="option-chip" data-val="wide" onclick="selectChip('margin-group',this);setMargin('wide')">چوڑا (30mm)</div>
+      <div class="option-chip" data-val="custom" onclick="selectChip('margin-group',this);showCustomMargin()">کسٹم</div>
     </div>
 
-    <div class="status-bar" id="console">رپورٹ: سسٹم تیار ہے...</div>
+    <div id="custom-margin-row" class="popup-row" style="display:none">
+      <label>مارجن (mm)</label>
+      <input type="number" id="custom-margin-inp" value="20" min="0" max="60" placeholder="mm">
+      <button class="popup-btn primary" onclick="applyCustomMargin()">لگائیں</button>
+    </div>
 
-    <script>
-        function log(msg) {
-            const con = document.getElementById('console');
-            con.innerText = "رپورٹ: " + msg;
-            alert(msg);
-        }
+    <div class="popup-btn-row">
+      <button class="popup-btn close-btn" onclick="closePopup('popup-page')">بند کریں</button>
+    </div>
+  </div>
+</div>
 
-        function vibrateDevice() {
-            if (navigator.vibrate) {
-                navigator.vibrate(200);
-                log("فون وائبریٹ ہوا!");
-            } else {
-                log("آپ کا براؤزر وائبریشن سپورٹ نہیں کرتا۔");
-            }
-        }
+<!-- ===== POPUP: FONT UPLOAD ===== -->
+<div class="popup-overlay" id="popup-font" onclick="closeOnBg(event, 'popup-font')">
+  <div class="popup-sheet">
+    <div class="popup-title">✍ کسٹم فونٹ</div>
 
-        function playSound() {
-            log("آواز پلے کی جا رہی ہے...");
-            // یہاں آپ کوئی بھی چھوٹا سا ساؤنڈ لنک ڈال سکتے ہیں
-            let audio = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
-            audio.play();
-        }
-    </script>
+    <div class="popup-row">
+      <label>فونٹ فائل (.ttf)</label>
+      <input type="file" id="font-file-inp" accept=".ttf,.otf,.woff,.woff2">
+    </div>
+    <div class="popup-row">
+      <label>فونٹ کا نام</label>
+      <input type="text" id="font-name-inp" placeholder="مثلاً: MyFont">
+    </div>
 
+    <div class="popup-btn-row">
+      <button class="popup-btn primary" onclick="uploadFont()">فونٹ اپ لوڈ کریں</button>
+      <button class="popup-btn close-btn" onclick="closePopup('popup-font')">بند کریں</button>
+    </div>
+
+    <div id="custom-font-list"></div>
+  </div>
+</div>
+
+<!-- ===== POPUP: SPACING ===== -->
+<div class="popup-overlay" id="popup-spacing" onclick="closeOnBg(event, 'popup-spacing')">
+  <div class="popup-sheet">
+    <div class="popup-title">⇕ سپیسنگ ترتیب</div>
+
+    <div class="popup-row">
+      <label>لائن سپیسنگ</label>
+      <select id="sp-line" style="flex:1;background:#1a0f08;border:1px solid var(--border);color:var(--btn-text);padding:8px;border-radius:8px;font-size:13px">
+        <option value="1.4">1.4</option>
+        <option value="1.6">1.6</option>
+        <option value="1.8" selected>1.8</option>
+        <option value="2.0">2.0</option>
+        <option value="2.4">2.4</option>
+        <option value="3.0">3.0</option>
+      </select>
+    </div>
+
+    <div class="popup-row">
+      <label>پیراگراف سپیسنگ (em)</label>
+      <input type="number" id="sp-para" value="0.5" min="0" max="4" step="0.1">
+    </div>
+
+    <div class="popup-row">
+      <label>فرسٹ لائن انڈینٹ (px)</label>
+      <input type="number" id="sp-indent" value="0" min="0" max="100" step="5">
+    </div>
+
+    <div class="popup-btn-row">
+      <button class="popup-btn primary" onclick="applySpacing()">لگائیں</button>
+      <button class="popup-btn close-btn" onclick="closePopup('popup-spacing')">بند کریں</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== POPUP: SAVE ===== -->
+<div class="popup-overlay" id="popup-save" onclick="closeOnBg(event, 'popup-save')">
+  <div class="popup-sheet">
+    <div class="popup-title">💾 فائل محفوظ کریں</div>
+
+    <div class="popup-row">
+      <label>فائل کا نام</label>
+      <input type="text" id="save-name" value="میری تحریر" placeholder="فائل کا نام">
+    </div>
+
+    <div class="popup-btn-row">
+      <button class="popup-btn primary" onclick="saveAs('txt')">📄 Text</button>
+      <button class="popup-btn primary" onclick="saveAs('doc')">📝 Word</button>
+      <button class="popup-btn primary" onclick="saveAs('pdf')">📕 PDF</button>
+    </div>
+    <div class="popup-btn-row">
+      <button class="popup-btn close-btn" onclick="closePopup('popup-save')">بند کریں</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+const editor  = document.getElementById('editor');
+const page    = document.getElementById('page');
+const toast   = document.getElementById('toast');
+
+let savedFonts = JSON.parse(localStorage.getItem('qalam_fonts') || '[]');
+let currentDir = 'rtl';
+
+// ============================================================
+//  INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  loadFontsFromStorage();
+  renderFontList();
+  updateCounts();
+  loadDraft();
+});
+
+// ============================================================
+//  DRAFT AUTO-SAVE
+// ============================================================
+editor.addEventListener('input', () => {
+  updateCounts();
+  localStorage.setItem('qalam_draft', editor.innerHTML);
+});
+
+function loadDraft() {
+  const d = localStorage.getItem('qalam_draft');
+  if (d) editor.innerHTML = d;
+}
+
+// ============================================================
+//  WORD / CHAR COUNT
+// ============================================================
+function updateCounts() {
+  const text = editor.innerText.trim();
+  const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+  const chars = text.length;
+  document.getElementById('word-count').textContent = 'الفاظ: ' + words;
+  document.getElementById('char-count').textContent = 'حروف: ' + chars;
+}
+
+// ============================================================
+//  FORMAT COMMANDS
+// ============================================================
+function execFmt(cmd, val) {
+  editor.focus();
+  document.execCommand(cmd, false, val || null);
+  updateFormatBtns();
+}
+
+function updateFormatBtns() {
+  document.getElementById('btn-bold').classList.toggle('active', document.queryCommandState('bold'));
+  document.getElementById('btn-italic').classList.toggle('active', document.queryCommandState('italic'));
+  document.getElementById('btn-underline').classList.toggle('active', document.queryCommandState('underline'));
+}
+editor.addEventListener('keyup', updateFormatBtns);
+editor.addEventListener('mouseup', updateFormatBtns);
+
+// ============================================================
+//  FONT
+// ============================================================
+function applyFont() {
+  const val = document.getElementById('font-select').value;
+  editor.style.fontFamily = val;
+}
+
+// ============================================================
+//  FONT SIZE
+// ============================================================
+function changeFontSize(delta) {
+  const inp = document.getElementById('font-size-inp');
+  let v = parseInt(inp.value) + delta;
+  v = Math.max(8, Math.min(96, v));
+  inp.value = v;
+  setFontSize();
+}
+
+function setFontSize() {
+  const v = document.getElementById('font-size-inp').value;
+  editor.style.fontSize = v + 'px';
+  document.documentElement.style.setProperty('--font-size', v + 'px');
+}
+
+// ============================================================
+//  COLOR
+// ============================================================
+function applyColor() {
+  const c = document.getElementById('text-color').value;
+  execFmt('foreColor', c);
+}
+
+function applyHighlight() {
+  const c = document.getElementById('highlight-color').value;
+  execFmt('hiliteColor', c);
+}
+
+// ============================================================
+//  DIRECTION
+// ============================================================
+function setDir(dir) {
+  currentDir = dir;
+  editor.dir = dir;
+  editor.style.textAlign = dir === 'rtl' ? 'right' : 'left';
+  editor.style.direction = dir;
+  document.getElementById('btn-rtl').classList.toggle('active', dir === 'rtl');
+  document.getElementById('btn-ltr').classList.toggle('active', dir === 'ltr');
+  // Apply to selection if any
+  applyDirToSelection(dir);
+}
+
+function applyDirToSelection(dir) {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed) return;
+  const span = document.createElement('span');
+  span.style.direction = dir;
+  span.style.unicodeBidi = 'isolate';
+  try { range.surroundContents(span); } catch(e) {}
+}
+
+// ============================================================
+//  LINE SPACING
+// ============================================================
+function applyLineSpacing() {
+  const v = document.getElementById('line-spacing').value;
+  editor.style.lineHeight = v;
+}
+
+// ============================================================
+//  FULL SPACING (popup)
+// ============================================================
+function applySpacing() {
+  const line   = document.getElementById('sp-line').value;
+  const para   = document.getElementById('sp-para').value;
+  const indent = document.getElementById('sp-indent').value;
+
+  editor.style.lineHeight = line;
+  document.getElementById('line-spacing').value = line;
+
+  // inject style tag for p
+  let st = document.getElementById('spacing-style');
+  if (!st) { st = document.createElement('style'); st.id = 'spacing-style'; document.head.appendChild(st); }
+  st.textContent = `#editor p { margin-bottom: ${para}em; text-indent: ${indent}px; }
+  #editor { text-indent: ${indent}px; }`;
+
+  closePopup('popup-spacing');
+  showToast('سپیسنگ لگا دی گئی ✓');
+}
+
+// ============================================================
+//  PAGE SIZE
+// ============================================================
+const pageSizes = {
+  a4:     { w: '210mm', h: '297mm' },
+  letter: { w: '215.9mm', h: '279.4mm' },
+  legal:  { w: '215.9mm', h: '355.6mm' },
+};
+
+function setPageSize(size) {
+  const s = pageSizes[size];
+  document.documentElement.style.setProperty('--page-w', s.w);
+  document.documentElement.style.setProperty('--page-h', s.h);
+  updatePageInfo();
+}
+
+function setMargin(m) {
+  const map = { normal: '20mm', narrow: '12mm', wide: '30mm' };
+  document.documentElement.style.setProperty('--margin', map[m]);
+  document.getElementById('custom-margin-row').style.display = 'none';
+  updatePageInfo();
+}
+
+function showCustomMargin() {
+  document.getElementById('custom-margin-row').style.display = 'flex';
+}
+
+function applyCustomMargin() {
+  const v = document.getElementById('custom-margin-inp').value;
+  document.documentElement.style.setProperty('--margin', v + 'mm');
+  updatePageInfo();
+  showToast('کسٹم مارجن لگا دیا ✓');
+}
+
+function updatePageInfo() {
+  const sel = document.querySelector('#size-group .selected');
+  const msel = document.querySelector('#margin-group .selected');
+  document.getElementById('page-info').textContent =
+    (sel ? sel.dataset.val.toUpperCase() : 'A4') +
+    ' · ' +
+    (msel ? msel.textContent.trim().split(' ')[0] : 'نارمل');
+}
+
+// ============================================================
+//  CUSTOM FONT UPLOAD
+// ============================================================
+async function uploadFont() {
+  const file = document.getElementById('font-file-inp').files[0];
+  let name = document.getElementById('font-name-inp').value.trim();
+
+  if (!file) { showToast('⚠ فائل منتخب کریں'); return; }
+  if (!name) name = file.name.replace(/\.[^.]+$/, '');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const fontData = { name, dataUrl };
+
+    // Remove if same name exists
+    savedFonts = savedFonts.filter(f => f.name !== name);
+    savedFonts.push(fontData);
+    localStorage.setItem('qalam_fonts', JSON.stringify(savedFonts));
+
+    injectFont(fontData);
+    addFontToSelector(name);
+    renderFontList();
+    closePopup('popup-font');
+    showToast('فونٹ محفوظ ہو گیا: ' + name + ' ✓');
+  };
+  reader.readAsDataURL(file);
+}
+
+function injectFont({ name, dataUrl }) {
+  const id = 'font-' + name.replace(/\s/g,'_');
+  if (document.getElementById(id)) return;
+  const style = document.createElement('style');
+  style.id = id;
+  style.textContent = `@font-face { font-family: '${name}'; src: url('${dataUrl}'); }`;
+  document.head.appendChild(style);
+}
+
+function addFontToSelector(name) {
+  const sel = document.getElementById('font-select');
+  if ([...sel.options].some(o => o.value === `'${name}',sans-serif`)) return;
+  const opt = document.createElement('option');
+  opt.value = `'${name}',sans-serif`;
+  opt.textContent = name;
+  sel.appendChild(opt);
+  sel.value = opt.value;
+  applyFont();
+}
+
+function loadFontsFromStorage() {
+  savedFonts.forEach(f => {
+    injectFont(f);
+    addFontToSelector(f.name);
+  });
+}
+
+function renderFontList() {
+  const list = document.getElementById('custom-font-list');
+  list.innerHTML = savedFonts.length ? '<div style="color:#9a8060;font-size:11px;margin-bottom:8px">محفوظ فونٹس:</div>' : '';
+  savedFonts.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'font-item';
+    div.innerHTML = `<span style="font-family:'${f.name}'">${f.name}</span>
+      <button onclick="deleteFont('${f.name}')">✕</button>`;
+    list.appendChild(div);
+  });
+}
+
+function deleteFont(name) {
+  savedFonts = savedFonts.filter(f => f.name !== name);
+  localStorage.setItem('qalam_fonts', JSON.stringify(savedFonts));
+  const sel = document.getElementById('font-select');
+  [...sel.options].forEach(o => { if (o.value === `'${name}',sans-serif`) sel.remove(o.index); });
+  const styleEl = document.getElementById('font-' + name.replace(/\s/g,'_'));
+  if (styleEl) styleEl.remove();
+  renderFontList();
+  showToast('فونٹ حذف ہو گیا');
+}
+
+// ============================================================
+//  SAVE / DOWNLOAD
+// ============================================================
+function saveAs(fmt) {
+  const name = document.getElementById('save-name').value.trim() || 'میری تحریر';
+
+  if (fmt === 'txt') {
+    const blob = new Blob([editor.innerText], { type: 'text/plain;charset=utf-8' });
+    dl(blob, name + '.txt');
+
+  } else if (fmt === 'doc') {
+    const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office'
+      xmlns:w='urn:schemas-microsoft-com:office:word'
+      xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <style>
+        body { font-family: 'Noto Nastaliq Urdu', serif; direction:${currentDir}; font-size:14pt; }
+        p { text-align: ${currentDir === 'rtl' ? 'right' : 'left'}; }
+      </style></head>
+      <body dir="${currentDir}">${editor.innerHTML}</body></html>`;
+    const blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+    dl(blob, name + '.doc');
+
+  } else if (fmt === 'pdf') {
+    closePopup('popup-save');
+    showToast('PDF بن رہی ہے...');
+    const opt = {
+      margin:       [10, 10],
+      filename:     name + '.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    // Clone page without outer decorations
+    const clone = page.cloneNode(true);
+    clone.style.boxShadow = 'none';
+    clone.style.background = '#fff';
+    html2pdf().set(opt).from(clone).save().then(() => showToast('PDF محفوظ ہو گئی ✓'));
+    return;
+  }
+
+  closePopup('popup-save');
+  showToast(fmt.toUpperCase() + ' فائل ڈاؤن لوڈ ہو رہی ہے ✓');
+}
+
+function dl(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+//  POPUP HELPERS
+// ============================================================
+function openPopup(id) { document.getElementById(id).classList.add('open'); }
+function closePopup(id) { document.getElementById(id).classList.remove('open'); }
+function closeOnBg(e, id) { if (e.target.id === id) closePopup(id); }
+
+function selectChip(groupId, el) {
+  document.querySelectorAll('#' + groupId + ' .option-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============================================================
+//  KEYBOARD SHORTCUTS (desktop bonus)
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 's') { e.preventDefault(); openPopup('popup-save'); }
+    if (e.key === 'p') { e.preventDefault(); openPopup('popup-page'); }
+  }
+});
+</script>
 </body>
 </html>
