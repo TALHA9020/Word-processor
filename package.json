@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "word processor",
   "version": "1.0.0",
   "dependencies": {
     "@capacitor/android": "^5.0.0",
